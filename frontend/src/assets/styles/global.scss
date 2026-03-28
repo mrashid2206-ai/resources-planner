@@ -1,0 +1,120 @@
+/* ============================================================
+   RESOURCE PLANNER PRO — Global Styles
+   Design System from Requirements Doc v2.0
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ─── CSS Variables (Design Tokens) ─────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-page: #0c0f17;
+  --bg-card: #141820;
+  --bg-card-inner: #0c0f17;
+  --bg-input: #1a1f2e;
+
+  /* Borders */
+  --border-default: #1e2433;
+  --border-active: #2d3548;
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-faint: #4a5568;
+
+  /* Accent */
+  --accent-purple: #6366f1;
+  --accent-purple-light: #8b5cf6;
+  --accent-purple-text: #a5b4fc;
+
+  /* Semantic */
+  --success-text: #34d399;
+  --success-bg: #0d2818;
+  --success-border: #065f27;
+
+  --warning-text: #fbbf24;
+  --warning-bg: #2c1f0a;
+  --warning-border: #7c5a12;
+
+  --danger-text: #f87171;
+  --danger-bg: #2c0a0a;
+  --danger-border: #7c1212;
+
+  /* Spacing */
+  --radius-outer: 14px;
+  --radius-inner: 10px;
+  --radius-button: 8px;
+
+  /* Fonts */
+  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent-purple-text);
+  text-decoration: none;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-active);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ─── Utility Classes ───────────────────────────────────── */
+.mono {
+  font-family: var(--font-mono);
+}
+
+.text-success { color: var(--success-text); }
+.text-warning { color: var(--warning-text); }
+.text-danger  { color: var(--danger-text); }
+.text-muted   { color: var(--text-muted); }
+
+/* ─── Animation Keyframes ───────────────────────────────── */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
