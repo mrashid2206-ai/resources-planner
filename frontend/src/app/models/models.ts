@@ -8,7 +8,7 @@
 export type ProjectStatus = 'active' | 'on_hold' | 'completed';
 export type BidStatus = 'pending' | 'submitted' | 'won' | 'lost';
 export type AssignmentType = 'project' | 'bid';
-export type ResourceAvailability = 'full_time' | 'part_time';
+export type ResourceAvailability = 'full_time' | 'part_time'; // full_time = SITA Full Time, part_time = Contractor
 
 // ─── Core Models ────────────────────────────────────────────
 
@@ -22,6 +22,8 @@ export interface Resource {
   monthlyCapacity: number;
   hourlyRate?: number;
   avatarUrl?: string;
+  companyName?: string;
+  joinDate?: string;
   isArchived: boolean;
   assignments: Assignment[];
   leaves: Leave[];
@@ -110,6 +112,8 @@ export interface ResourceRequest {
   monthlyCapacity?: number;
   hourlyRate?: number;
   avatarUrl?: string;
+  companyName?: string;
+  joinDate?: string;
   tagIds?: string[];
 }
 
@@ -147,6 +151,8 @@ export interface AssignmentRequest {
   type: AssignmentType;
   startMonth: number;
   endMonth: number;
+  startYear?: number;
+  endYear?: number;
   allocation: number;
 }
 

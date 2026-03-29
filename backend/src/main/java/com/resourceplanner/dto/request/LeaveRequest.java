@@ -17,6 +17,5 @@ public class LeaveRequest {
     @NotNull @Min(1) @Max(22)
     private Integer days;
 
-    @NotBlank
     private String reason;
 }

@@ -39,14 +39,6 @@ import { DashboardData, Resource, Project, Bid, MONTHS, getUtilizationColor } fr
         <div class="stat-value">{{ dashboard.activeBids }}</div>
         <div class="stat-label">Active Bids</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ formatMoney(dashboard.totalBudget) }}</div>
-        <div class="stat-label">Total Budget</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ formatMoney(dashboard.weightedPipeline) }}</div>
-        <div class="stat-label">Weighted Pipeline</div>
-      </div>
     </div>
 
     <!-- Active Projects -->

@@ -69,6 +69,8 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .type(request.getType())
                 .startMonth(request.getStartMonth())
                 .endMonth(request.getEndMonth())
+                .startYear(request.getStartYear() != null ? request.getStartYear() : java.time.Year.now().getValue())
+                .endYear(request.getEndYear() != null ? request.getEndYear() : java.time.Year.now().getValue())
                 .allocation(Math.min(100, Math.max(1, request.getAllocation())))
                 .build();
 
@@ -95,6 +97,8 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.setType(request.getType());
         assignment.setStartMonth(request.getStartMonth());
         assignment.setEndMonth(request.getEndMonth());
+        if (request.getStartYear() != null) assignment.setStartYear(request.getStartYear());
+        if (request.getEndYear() != null) assignment.setEndYear(request.getEndYear());
         assignment.setAllocation(Math.min(100, Math.max(1, request.getAllocation())));
 
         // Update resource link if changed

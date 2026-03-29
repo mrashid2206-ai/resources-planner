@@ -25,6 +25,9 @@ public class AssignmentRequest {
     @NotNull @Min(0) @Max(11)
     private Integer endMonth;
 
+    private Integer startYear;
+    private Integer endYear;
+
     @NotNull @Min(1) @Max(100)
     private Integer allocation;
 }

@@ -18,6 +18,8 @@ public class ResourceResponse {
     private Integer monthlyCapacity;
     private BigDecimal hourlyRate;
     private String avatarUrl;
+    private String companyName;
+    private java.time.LocalDate joinDate;
     private Boolean isArchived;
     private List<AssignmentResponse> assignments;
     private List<LeaveResponse> leaves;

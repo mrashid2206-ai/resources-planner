@@ -14,7 +14,14 @@ import { Bid, BidRequest, MONTHS } from '../../models/models';
 
       <div class="page-header">
         <h1>Bids &amp; Proposals</h1>
-        <button class="btn-primary" (click)="showModal = true; resetForm()">+ Add Bid</button>
+        <div class="header-controls">
+          <label class="filter-lbl">Year</label>
+          <select class="filter-sel" [(ngModel)]="filterYear">
+            <option value="">All Years</option>
+            <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
+          </select>
+          <button class="btn-primary" (click)="showModal = true; resetForm()">+ Add Bid</button>
+        </div>
       </div>
 
       <div class="filter-row">
@@ -31,30 +38,23 @@ import { Bid, BidRequest, MONTHS } from '../../models/models';
               <div class="card-client" *ngIf="b.client">{{ b.client }}</div>
             </div>
             <div class="card-actions">
-              <span class="badge" [ngClass]="'badge-' + b.status">{{ b.status }}</span>
+              <span class="badge" [ngClass]="'badge-' + b.status">{{ bidStatusLabels[b.status] || b.status }}</span>
               <button class="icon-btn" (click)="editBid(b)" title="Edit">✎</button>
               <button class="icon-btn red" (click)="deleteBid(b.id)" title="Delete">×</button>
             </div>
           </div>
 
           <div class="card-meta">
-            <span>{{ formatValue(b.estimatedValue) }}</span>
-            <span class="meta-dot">·</span>
-            <span>{{ months[b.startMonth] }}–{{ months[b.endMonth] }}</span>
+            <span *ngIf="b.client">{{ b.client }}</span>
+            <span *ngIf="b.client" class="meta-dot">·</span>
+            <span>{{ months[b.startMonth] }} {{ b.startYear }}–{{ months[b.endMonth] }} {{ b.endYear }}</span>
             <span class="meta-dot">·</span>
             <span>{{ b.assignments.length }} resources</span>
           </div>
 
-          <div *ngIf="b.probability != null" class="prob-row">
-            <div class="prob-track">
-              <div class="prob-fill" [style.width.%]="b.probability" [style.background]="getProbColor(b.probability)"></div>
-            </div>
-            <span class="prob-label">{{ b.probability }}% win probability</span>
-          </div>
-
           <div class="status-seg">
             <button *ngFor="let s of bidStatuses" class="seg-btn" [class.active]="b.status === s"
-                    (click)="changeStatus(b, s)">{{ s }}</button>
+                    (click)="changeStatus(b, s)">{{ bidStatusLabels[s] || s }}</button>
           </div>
 
           <div *ngIf="b.winLossReason" class="reason-note">{{ b.winLossReason }}</div>
@@ -87,17 +87,15 @@ import { Bid, BidRequest, MONTHS } from '../../models/models';
             <button class="btn-close" (click)="showModal = false">✕</button>
           </div>
           <div class="fg"><label>Name *</label><input [(ngModel)]="form.name" placeholder="Cloud Migration Proposal" /></div>
-          <div class="fg"><label>Client</label><input [(ngModel)]="form.client" placeholder="Acme Corp" /></div>
-          <div class="form-row">
-            <div class="fg"><label>Estimated Value ($)</label><input [(ngModel)]="form.estimatedValue" type="number" /></div>
-            <div class="fg"><label>Win Probability (%)</label><input [(ngModel)]="form.probability" type="number" min="0" max="100" /></div>
-          </div>
+          <div class="fg"><label>Country</label><input [(ngModel)]="form.client" placeholder="Qatar, Saudi, Angola..." /></div>
           <div class="fg"><label>Description</label><textarea [(ngModel)]="form.description" rows="3"></textarea></div>
           <div class="form-row">
-            <div class="fg"><label>Start</label><select [(ngModel)]="form.startMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
-            <div class="fg"><label>End</label><select [(ngModel)]="form.endMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>Start Month</label><select [(ngModel)]="form.startMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>Start Year</label><select [(ngModel)]="form.startYear"><option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option></select></div>
+            <div class="fg"><label>End Month</label><select [(ngModel)]="form.endMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>End Year</label><select [(ngModel)]="form.endYear"><option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option></select></div>
           </div>
-          <div class="fg"><label>Status</label><select [(ngModel)]="form.status"><option *ngFor="let s of bidStatuses" [value]="s">{{ s }}</option></select></div>
+          <div class="fg"><label>Status</label><select [(ngModel)]="form.status"><option *ngFor="let s of bidStatuses" [value]="s">{{ bidStatusLabels[s] || s }}</option></select></div>
           <div *ngIf="form.status === 'won' || form.status === 'lost'" class="fg">
             <label>Win/Loss Reason</label>
             <textarea [(ngModel)]="form.winLossReason" rows="2" placeholder="Reason for outcome"></textarea>
@@ -148,6 +146,13 @@ import { Bid, BidRequest, MONTHS } from '../../models/models';
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 20px; gap: 16px;
     }
+    .header-controls { display: flex; align-items: center; gap: 10px; }
+    .filter-lbl { font-size: 12px; color: #64748b; }
+    .filter-sel {
+      background: #141820; border: 1px solid #2d3548; color: #e2e8f0;
+      padding: 6px 10px; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+    .filter-sel:focus { outline: none; border-color: #6366f1; }
     .page-header h1 { font-size: 22px; font-weight: 700; margin: 0; }
 
     .filter-row { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -298,15 +303,18 @@ import { Bid, BidRequest, MONTHS } from '../../models/models';
 export class BidsComponent implements OnInit {
   bids: Bid[] = [];
   months = MONTHS;
+  yearOptions = Array.from({length: 10}, (_, i) => 2026 + i);
   bidStatuses: string[] = ['pending', 'submitted', 'won', 'lost'];
+  bidStatusLabels: Record<string, string> = { pending: 'In Progress', submitted: 'Submitted', won: 'Won', lost: 'Lost' };
   activeFilter = 'all';
+  filterYear = '';
   showModal = false;
   showReasonModal = false;
   editingId: string | null = null;
   pendingBid: Bid | null = null;
   pendingStatus = '';
   statusReason = '';
-  form: any = { name: '', status: 'pending', startMonth: 0, endMonth: 5, probability: 50 };
+  form: any = { name: '', status: 'pending', startMonth: 0, endMonth: 5, startYear: new Date().getFullYear(), endYear: new Date().getFullYear(), probability: 50 };
 
   // Confirm modal
   showConfirmModal = false;
@@ -318,7 +326,7 @@ export class BidsComponent implements OnInit {
 
   filters = [
     { label: 'All', value: 'all' },
-    { label: 'Pending', value: 'pending' },
+    { label: 'In Progress', value: 'pending' },
     { label: 'Submitted', value: 'submitted' },
     { label: 'Won', value: 'won' },
     { label: 'Lost', value: 'lost' },
@@ -330,27 +338,38 @@ export class BidsComponent implements OnInit {
   load() { this.bidService.getAll().subscribe({ next: d => this.bids = d, error: e => console.error(e) }); }
 
   get filteredBids(): Bid[] {
-    return this.activeFilter === 'all' ? this.bids : this.bids.filter(b => b.status === this.activeFilter);
+    let result = this.bids;
+    if (this.filterYear) {
+      const y = +this.filterYear;
+      result = result.filter(b => (b.startYear || y) <= y && (b.endYear || y) >= y);
+    }
+    if (this.activeFilter !== 'all') result = result.filter(b => b.status === this.activeFilter);
+    return result;
   }
 
   getCount(filter: string): number {
-    return filter === 'all' ? this.bids.length : this.bids.filter(b => b.status === filter).length;
+    let base = this.bids;
+    if (this.filterYear) {
+      const y = +this.filterYear;
+      base = base.filter(b => (b.startYear || y) <= y && (b.endYear || y) >= y);
+    }
+    return filter === 'all' ? base.length : base.filter(b => b.status === filter).length;
   }
 
   resetForm() {
     this.editingId = null;
-    this.form = { name: '', status: 'pending', startMonth: 0, endMonth: 5, probability: 50, client: '', description: '', estimatedValue: null, winLossReason: '' };
+    this.form = { name: '', status: 'pending', startMonth: 0, endMonth: 5, startYear: new Date().getFullYear(), endYear: new Date().getFullYear(), probability: 50, client: '', description: '', estimatedValue: null, winLossReason: '' };
   }
 
   editBid(b: Bid) {
     this.editingId = b.id;
-    this.form = { name: b.name, status: b.status, startMonth: b.startMonth, endMonth: b.endMonth, probability: b.probability ?? 50, client: b.client || '', description: b.description || '', estimatedValue: b.estimatedValue, winLossReason: b.winLossReason || '' };
+    this.form = { name: b.name, status: b.status, startMonth: b.startMonth, endMonth: b.endMonth, startYear: b.startYear || new Date().getFullYear(), endYear: b.endYear || new Date().getFullYear(), probability: b.probability ?? 50, client: b.client || '', description: b.description || '', estimatedValue: b.estimatedValue, winLossReason: b.winLossReason || '' };
     this.showModal = true;
   }
 
   saveBid() {
     if (!this.form.name) return;
-    const req: BidRequest = { name: this.form.name, status: this.form.status, startMonth: +this.form.startMonth, endMonth: +this.form.endMonth, probability: +this.form.probability, client: this.form.client, description: this.form.description, estimatedValue: this.form.estimatedValue, winLossReason: this.form.winLossReason };
+    const req: BidRequest = { name: this.form.name, status: this.form.status, startMonth: +this.form.startMonth, endMonth: +this.form.endMonth, startYear: +this.form.startYear, endYear: +this.form.endYear, probability: +this.form.probability, client: this.form.client, description: this.form.description, estimatedValue: this.form.estimatedValue, winLossReason: this.form.winLossReason };
     const obs = this.editingId ? this.bidService.update(this.editingId, req) : this.bidService.create(req);
     obs.subscribe({ next: () => { this.showModal = false; this.load(); } });
   }

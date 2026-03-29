@@ -24,5 +24,7 @@ public class ResourceRequest {
     private Integer monthlyCapacity = 22;
     private BigDecimal hourlyRate;
     private String avatarUrl;
+    private String companyName;
+    private String joinDate;
     private List<UUID> tagIds;
 }

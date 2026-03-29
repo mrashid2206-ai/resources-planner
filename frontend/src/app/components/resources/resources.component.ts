@@ -66,7 +66,13 @@ import { forkJoin } from 'rxjs';
             </div>
           </div>
 
-          <!-- Monthly Capacity Grid -->
+          <!-- Year Selector + Monthly Capacity Grid -->
+          <div class="grid-year-row">
+            <span class="grid-year-label">Year</span>
+            <select class="grid-year-select" [(ngModel)]="viewYear">
+              <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+            </select>
+          </div>
           <div class="capacity-grid">
             <div *ngFor="let m of months; let i = index" class="month-card"
                  [style.background]="getUtilColor(selectedResource, i).bg"
@@ -90,7 +96,7 @@ import { forkJoin } from 'rxjs';
               <div class="ac-content">
                 <div class="ac-name">{{ a.name }}</div>
                 <div class="ac-meta">
-                  {{ a.type === 'project' ? '🚀 Project' : '📋 Bid' }} · {{ months[a.startMonth] }}–{{ months[a.endMonth] }} · {{ a.allocation }}%
+                  {{ a.type === 'project' ? '🚀 Project' : '📋 Bid' }} · {{ months[a.startMonth] }} {{ a.startYear }}–{{ months[a.endMonth] }} {{ a.endYear }} · {{ a.allocation }}%
                 </div>
               </div>
               <div class="ac-actions">
@@ -143,21 +149,25 @@ import { forkJoin } from 'rxjs';
             <input [(ngModel)]="resourceForm.email" placeholder="jane@company.com" />
           </div>
           <div class="fg">
-            <label>Hourly Rate</label>
-            <input type="number" [(ngModel)]="resourceForm.hourlyRate" placeholder="0" min="0" />
+            <label>Join Date</label>
+            <input type="date" [(ngModel)]="resourceForm.joinDate" />
           </div>
           <div class="fg">
             <label>Monthly Capacity (days)</label>
             <input type="number" [(ngModel)]="resourceForm.monthlyCapacity" placeholder="22" min="1" max="31" />
           </div>
           <div class="fg">
-            <label>Availability</label>
+            <label>Resource Type</label>
             <div class="type-toggle">
               <button [class.active]="resourceForm.availability === 'full_time'"
-                      (click)="resourceForm.availability = 'full_time'">Full Time</button>
+                      (click)="resourceForm.availability = 'full_time'; resourceForm.companyName = ''">SITA Full Time</button>
               <button [class.active]="resourceForm.availability === 'part_time'"
-                      (click)="resourceForm.availability = 'part_time'">Part Time</button>
+                      (click)="resourceForm.availability = 'part_time'">Contractor</button>
             </div>
+          </div>
+          <div class="fg" *ngIf="resourceForm.availability === 'part_time'">
+            <label>Company Name *</label>
+            <input [(ngModel)]="resourceForm.companyName" placeholder="Company name for contractor" />
           </div>
           <div class="modal-actions">
             <button class="btn-secondary" (click)="showResourceModal = false">Cancel</button>
@@ -211,9 +221,21 @@ import { forkJoin } from 'rxjs';
               </select>
             </div>
             <div class="fg">
+              <label>Start Year</label>
+              <select [(ngModel)]="assignForm.startYear">
+                <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="fg">
               <label>End Month</label>
               <select [(ngModel)]="assignForm.endMonth">
                 <option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>End Year</label>
+              <select [(ngModel)]="assignForm.endYear">
+                <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
               </select>
             </div>
           </div>
@@ -247,7 +269,9 @@ import { forkJoin } from 'rxjs';
             </div>
             <div class="fg">
               <label>Year</label>
-              <input type="number" [(ngModel)]="leaveForm.year" min="2024" max="2030" />
+              <select [(ngModel)]="leaveForm.year">
+                <option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option>
+              </select>
             </div>
           </div>
           <div class="fg">
@@ -261,7 +285,7 @@ import { forkJoin } from 'rxjs';
           <div class="modal-actions">
             <button class="btn-secondary" (click)="showLeaveModal = false">Cancel</button>
             <button class="btn-primary" (click)="saveLeave()"
-                    [disabled]="!leaveForm.reason || leaveForm.days < 1 || leaveForm.days > 22">
+                    [disabled]="leaveForm.days < 1 || leaveForm.days > 22">
               {{ editingLeaveId ? 'Save Changes' : 'Save' }}
             </button>
           </div>
@@ -369,6 +393,13 @@ import { forkJoin } from 'rxjs';
     .btn-leave:hover { background: rgba(148,163,184,.08); color: #e2e8f0; }
 
     /* ── Monthly Capacity Grid ── */
+    .grid-year-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .grid-year-label { font-size: 12px; color: #64748b; }
+    .grid-year-select {
+      background: #0c0f17; border: 1px solid #2d3548; color: #e2e8f0;
+      padding: 5px 10px; border-radius: 6px; font-size: 12px; font-family: inherit;
+    }
+    .grid-year-select:focus { outline: none; border-color: #6366f1; }
     .capacity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
     .month-card {
       border: 1px solid; border-radius: 10px; padding: 12px; text-align: center;
@@ -525,6 +556,8 @@ export class ResourcesComponent implements OnInit {
   selectedResource: Resource | null = null;
   months = MONTHS;
   monthIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  yearOptions = Array.from({length: 10}, (_, i) => 2026 + i);
+  viewYear = new Date().getFullYear();
 
   // Resource modal
   showResourceModal = false;
@@ -542,6 +575,8 @@ export class ResourcesComponent implements OnInit {
     name: '',
     startMonth: 0,
     endMonth: 5,
+    startYear: new Date().getFullYear(),
+    endYear: new Date().getFullYear(),
     allocation: 100
   };
 
@@ -595,12 +630,14 @@ export class ResourcesComponent implements OnInit {
   // ── Utilization helpers ──
 
   getUtil(r: Resource, monthIndex: number): number {
-    const cap = r.monthlyCapacity || 22;
-    const leave = r.leaves.find(l => l.month === monthIndex);
-    const effectiveCap = Math.max(0, cap - (leave ? leave.days : 0));
-    if (effectiveCap === 0) return 0;
+    const y = this.viewYear;
+    const target = y * 12 + monthIndex;
     const alloc = r.assignments
-      .filter(a => monthIndex >= a.startMonth && monthIndex <= a.endMonth)
+      .filter(a => {
+        const aStart = (a.startYear || y) * 12 + a.startMonth;
+        const aEnd = (a.endYear || y) * 12 + a.endMonth;
+        return target >= aStart && target <= aEnd;
+      })
       .reduce((sum, a) => sum + a.allocation, 0);
     return Math.round(alloc);
   }
@@ -635,19 +672,19 @@ export class ResourcesComponent implements OnInit {
 
   getCapacity(r: Resource, monthIndex: number): number {
     const cap = r.monthlyCapacity || 22;
-    const leave = r.leaves.find(l => l.month === monthIndex);
+    const leave = r.leaves.find(l => l.month === monthIndex && l.year === this.viewYear);
     return Math.max(0, cap - (leave ? leave.days : 0));
   }
 
   getLeaveForMonth(r: Resource, monthIndex: number): Leave | undefined {
-    return r.leaves.find(l => l.month === monthIndex);
+    return r.leaves.find(l => l.month === monthIndex && l.year === this.viewYear);
   }
 
   // ── Resource CRUD ──
 
   openAddResourceModal() {
     this.editingResourceId = null;
-    this.resourceForm = { name: '', role: '', email: '', hourlyRate: undefined, monthlyCapacity: 22, availability: 'full_time' };
+    this.resourceForm = { name: '', role: '', email: '', monthlyCapacity: 22, availability: 'full_time', joinDate: '', companyName: '' };
     this.showResourceModal = true;
   }
 
@@ -658,9 +695,10 @@ export class ResourcesComponent implements OnInit {
       name: this.selectedResource.name,
       role: this.selectedResource.role,
       email: this.selectedResource.email ?? '',
-      hourlyRate: this.selectedResource.hourlyRate,
       monthlyCapacity: this.selectedResource.monthlyCapacity || 22,
-      availability: this.selectedResource.availability ?? 'full_time'
+      availability: this.selectedResource.availability ?? 'full_time',
+      joinDate: this.selectedResource.joinDate ?? '',
+      companyName: this.selectedResource.companyName ?? ''
     };
     this.showResourceModal = true;
   }
@@ -710,7 +748,7 @@ export class ResourcesComponent implements OnInit {
   openAssignmentModal() {
     this.editingAssignmentId = null;
     this.assignError = '';
-    this.assignForm = { type: 'project', projectId: '', bidId: '', name: '', startMonth: 0, endMonth: 5, allocation: 100 };
+    this.assignForm = { type: 'project', projectId: '', bidId: '', name: '', startMonth: 0, endMonth: 5, startYear: new Date().getFullYear(), endYear: new Date().getFullYear(), allocation: 100 };
     this.showAssignmentModal = true;
   }
 
@@ -724,6 +762,8 @@ export class ResourcesComponent implements OnInit {
       name: a.name,
       startMonth: a.startMonth,
       endMonth: a.endMonth,
+      startYear: a.startYear || new Date().getFullYear(),
+      endYear: a.endYear || new Date().getFullYear(),
       allocation: a.allocation
     };
     this.showAssignmentModal = true;
@@ -796,6 +836,8 @@ export class ResourcesComponent implements OnInit {
         name: f.name,
         startMonth: start,
         endMonth: end,
+        startYear: +f.startYear,
+        endYear: +f.endYear,
         allocation: newAlloc,
         ...(f.type === 'project' ? { projectId: f.projectId } : { bidId: f.bidId })
       };
@@ -814,6 +856,8 @@ export class ResourcesComponent implements OnInit {
         name: targetName,
         startMonth: start,
         endMonth: end,
+        startYear: +f.startYear,
+        endYear: +f.endYear,
         allocation: newAlloc,
         ...(f.type === 'project' ? { projectId: f.projectId } : { bidId: f.bidId })
       };

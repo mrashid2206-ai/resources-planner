@@ -191,7 +191,7 @@ export class LoginComponent {
     this.error = '';
 
     this.authService.login(this.username, this.password).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/']),
       error: (err) => {
         this.error = err.message || 'Invalid username or password';
         this.loading = false;

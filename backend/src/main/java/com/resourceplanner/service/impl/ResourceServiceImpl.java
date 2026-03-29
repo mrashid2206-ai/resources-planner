@@ -51,6 +51,7 @@ public class ResourceServiceImpl implements ResourceService {
                 .monthlyCapacity(request.getMonthlyCapacity())
                 .hourlyRate(request.getHourlyRate())
                 .avatarUrl(request.getAvatarUrl())
+                .companyName(request.getCompanyName())
                 .build();
 
         if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
@@ -74,6 +75,10 @@ public class ResourceServiceImpl implements ResourceService {
         resource.setMonthlyCapacity(request.getMonthlyCapacity());
         resource.setHourlyRate(request.getHourlyRate());
         resource.setAvatarUrl(request.getAvatarUrl());
+        resource.setCompanyName(request.getCompanyName());
+        if (request.getJoinDate() != null && !request.getJoinDate().isBlank()) {
+            resource.setJoinDate(java.time.LocalDate.parse(request.getJoinDate()));
+        }
 
         if (request.getTagIds() != null) {
             Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
@@ -119,6 +124,8 @@ public class ResourceServiceImpl implements ResourceService {
         dto.setMonthlyCapacity(entity.getMonthlyCapacity());
         dto.setHourlyRate(entity.getHourlyRate());
         dto.setAvatarUrl(entity.getAvatarUrl());
+        dto.setCompanyName(entity.getCompanyName());
+        dto.setJoinDate(entity.getJoinDate());
         dto.setIsArchived(entity.getIsArchived());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

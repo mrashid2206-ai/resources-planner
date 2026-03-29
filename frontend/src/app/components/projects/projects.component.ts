@@ -13,11 +13,18 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
 
       <div class="page-header">
         <h1>Projects</h1>
-        <button class="btn-primary" (click)="showModal = true; resetForm()">+ Add Project</button>
+        <div class="header-controls">
+          <label class="filter-lbl">Year</label>
+          <select class="filter-sel" [(ngModel)]="filterYear" (ngModelChange)="load()">
+            <option value="">All Years</option>
+            <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
+          </select>
+          <button class="btn-primary" (click)="showModal = true; resetForm()">+ Add Project</button>
+        </div>
       </div>
 
-      <div class="card-grid" *ngIf="projects.length">
-        <div *ngFor="let p of projects" class="proj-card" [class]="'st-' + p.status">
+      <div class="card-grid" *ngIf="filteredProjects.length">
+        <div *ngFor="let p of filteredProjects" class="proj-card" [class]="'st-' + p.status">
 
           <div class="card-top">
             <div class="card-info">
@@ -33,9 +40,7 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
           </div>
 
           <div class="card-meta">
-            <span>{{ formatBudget(p.budget) }}</span>
-            <span class="meta-dot">·</span>
-            <span>{{ months[p.startMonth] }}–{{ months[p.endMonth] }}</span>
+            <span>{{ months[p.startMonth] }} {{ p.startYear }}–{{ months[p.endMonth] }} {{ p.endYear }}</span>
             <span class="meta-dot">·</span>
             <span>{{ p.assignments.length }} resources</span>
           </div>
@@ -59,7 +64,7 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
         </div>
       </div>
 
-      <div *ngIf="!projects.length" class="empty-state">
+      <div *ngIf="!filteredProjects.length" class="empty-state">
         No projects yet. Click <strong>+ Add Project</strong> to get started.
       </div>
 
@@ -71,12 +76,13 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
             <button class="btn-close" (click)="showModal = false">✕</button>
           </div>
           <div class="fg"><label>Name *</label><input [(ngModel)]="form.name" placeholder="Project Phoenix" /></div>
-          <div class="fg"><label>Client</label><input [(ngModel)]="form.client" placeholder="Acme Corp" /></div>
-          <div class="fg"><label>Budget ($)</label><input [(ngModel)]="form.budget" type="number" /></div>
+          <div class="fg"><label>Country</label><input [(ngModel)]="form.client" placeholder="Qatar, Saudi, Angola..." /></div>
           <div class="fg"><label>Description</label><textarea [(ngModel)]="form.description" rows="3"></textarea></div>
           <div class="form-row">
-            <div class="fg"><label>Start</label><select [(ngModel)]="form.startMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
-            <div class="fg"><label>End</label><select [(ngModel)]="form.endMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>Start Month</label><select [(ngModel)]="form.startMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>Start Year</label><select [(ngModel)]="form.startYear"><option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option></select></div>
+            <div class="fg"><label>End Month</label><select [(ngModel)]="form.endMonth"><option *ngFor="let m of months; let i = index" [ngValue]="i">{{ m }}</option></select></div>
+            <div class="fg"><label>End Year</label><select [(ngModel)]="form.endYear"><option *ngFor="let y of yearOptions" [ngValue]="y">{{ y }}</option></select></div>
           </div>
           <div class="fg"><label>Status</label><select [(ngModel)]="form.status"><option *ngFor="let s of projectStatuses" [value]="s">{{ formatStatus(s) }}</option></select></div>
           <div class="modal-actions">
@@ -112,6 +118,13 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
       margin-bottom: 28px; gap: 16px;
     }
     .page-header h1 { font-size: 22px; font-weight: 700; margin: 0; }
+    .header-controls { display: flex; align-items: center; gap: 10px; }
+    .filter-lbl { font-size: 12px; color: #64748b; }
+    .filter-sel {
+      background: #141820; border: 1px solid #2d3548; color: #e2e8f0;
+      padding: 6px 10px; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+    .filter-sel:focus { outline: none; border-color: #6366f1; }
 
     /* ── Card Grid ── */
     .card-grid {
@@ -233,10 +246,22 @@ import { Project, ProjectRequest, MONTHS } from '../../models/models';
 export class ProjectsComponent implements OnInit {
   projects: Project[] = [];
   months = MONTHS;
+  yearOptions = Array.from({length: 10}, (_, i) => 2026 + i);
+  filterYear = '';
   projectStatuses: string[] = ['active', 'on_hold', 'completed'];
+
+  get filteredProjects(): Project[] {
+    if (!this.filterYear) return this.projects;
+    const y = +this.filterYear;
+    return this.projects.filter(p => {
+      const sy = p.startYear || y;
+      const ey = p.endYear || y;
+      return sy <= y && ey >= y;
+    });
+  }
   showModal = false;
   editingId: string | null = null;
-  form: any = { name: '', status: 'active', startMonth: 0, endMonth: 5 };
+  form: any = { name: '', status: 'active', startMonth: 0, endMonth: 5, startYear: new Date().getFullYear(), endYear: new Date().getFullYear() };
 
   // Confirm modal
   showConfirmModal = false;
@@ -255,18 +280,18 @@ export class ProjectsComponent implements OnInit {
 
   resetForm() {
     this.editingId = null;
-    this.form = { name: '', status: 'active', startMonth: 0, endMonth: 5, client: '', description: '', budget: null };
+    this.form = { name: '', status: 'active', startMonth: 0, endMonth: 5, startYear: new Date().getFullYear(), endYear: new Date().getFullYear(), client: '', description: '' };
   }
 
   editProject(p: Project) {
     this.editingId = p.id;
-    this.form = { name: p.name, status: p.status, startMonth: p.startMonth, endMonth: p.endMonth, client: p.client || '', description: p.description || '', budget: p.budget };
+    this.form = { name: p.name, status: p.status, startMonth: p.startMonth, endMonth: p.endMonth, startYear: p.startYear || new Date().getFullYear(), endYear: p.endYear || new Date().getFullYear(), client: p.client || '', description: p.description || '' };
     this.showModal = true;
   }
 
   saveProject() {
     if (!this.form.name) return;
-    const req: ProjectRequest = { name: this.form.name, status: this.form.status, startMonth: +this.form.startMonth, endMonth: +this.form.endMonth, client: this.form.client, description: this.form.description, budget: this.form.budget };
+    const req: ProjectRequest = { name: this.form.name, status: this.form.status, startMonth: +this.form.startMonth, endMonth: +this.form.endMonth, startYear: +this.form.startYear, endYear: +this.form.endYear, client: this.form.client, description: this.form.description };
     const obs = this.editingId ? this.projectService.update(this.editingId, req) : this.projectService.create(req);
     obs.subscribe({ next: () => { this.showModal = false; this.load(); } });
   }

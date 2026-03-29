@@ -47,6 +47,12 @@ public class Resource extends BaseEntity {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    @Column(name = "company_name", length = 255)
+    private String companyName;
+
+    @Column(name = "join_date")
+    private java.time.LocalDate joinDate;
+
     @Column(name = "is_archived")
     @Builder.Default
     private Boolean isArchived = false;
