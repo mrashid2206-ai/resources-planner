@@ -13,4 +13,4 @@ WORKDIR /app
 RUN npm install -g serve@14
 COPY --from=build /app/dist/resource-planner-pro/browser ./dist
 EXPOSE 3000
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
+CMD ["sh", "-c", "if [ -n \"$API_URL\" ]; then sed -i \"s|/api|$API_URL|g\" dist/*.js; fi && serve -s dist -l ${PORT:-3000}"]
