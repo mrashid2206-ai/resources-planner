@@ -79,6 +79,7 @@ interface ResourceCard {
             <button class="icon-btn export-btn" (click)="exportExcel()" title="Export Excel">XLS</button>
             <button class="icon-btn export-btn" (click)="exportPDF()" title="Export PDF">PDF</button>
           </div>
+          <button class="icon-btn" (click)="showPasswordModal = true" title="Change Password">Password</button>
           <button class="icon-btn logout-btn" (click)="logout()" title="Sign Out">Sign Out</button>
         </div>
       </div>
@@ -325,6 +326,33 @@ interface ResourceCard {
       </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div *ngIf="showPasswordModal" class="modal-backdrop" (click)="showPasswordModal = false">
+      <div class="pwd-modal" (click)="$event.stopPropagation()">
+        <div class="pwd-header">
+          <h2>Change Password</h2>
+          <button class="pwd-close" (click)="showPasswordModal = false">✕</button>
+        </div>
+        <div *ngIf="pwdMessage" class="pwd-msg" [class.pwd-err]="!pwdSuccess" [class.pwd-ok]="pwdSuccess">{{ pwdMessage }}</div>
+        <div class="pwd-field">
+          <label>Current Password</label>
+          <input type="password" [(ngModel)]="pwdForm.current" placeholder="Enter current password" />
+        </div>
+        <div class="pwd-field">
+          <label>New Password</label>
+          <input type="password" [(ngModel)]="pwdForm.newPwd" placeholder="Enter new password" />
+        </div>
+        <div class="pwd-field">
+          <label>Confirm New Password</label>
+          <input type="password" [(ngModel)]="pwdForm.confirm" placeholder="Confirm new password" />
+        </div>
+        <div class="pwd-actions">
+          <button class="btn-secondary" (click)="showPasswordModal = false">Cancel</button>
+          <button class="btn-primary" (click)="changePassword()" [disabled]="!pwdForm.current || !pwdForm.newPwd || !pwdForm.confirm">Change Password</button>
+        </div>
+      </div>
+    </div>
+
     <div *ngIf="loading" class="loading-screen">Loading dashboard...</div>
   `,
   styles: [`
@@ -365,6 +393,39 @@ interface ResourceCard {
     .export-btn:hover { border-color: rgba(52,211,153,.3); color: #34d399; }
     .logout-btn { color: #64748b; }
     .logout-btn:hover { border-color: rgba(248,113,113,.3); color: #f87171; }
+
+    /* ── Password Modal ── */
+    .modal-backdrop {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 200;
+    }
+    .pwd-modal {
+      background: #141820; border: 1px solid #1e2433; border-radius: 16px;
+      padding: 28px; width: 100%; max-width: 400px;
+    }
+    .pwd-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .pwd-header h2 { font-size: 18px; font-weight: 600; margin: 0; }
+    .pwd-close { background: none; border: none; color: #64748b; font-size: 18px; cursor: pointer; }
+    .pwd-field { margin-bottom: 14px; }
+    .pwd-field label { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: 500; }
+    .pwd-field input {
+      width: 100%; background: #0c0f17; border: 1px solid #1e2433; border-radius: 8px;
+      padding: 9px 12px; color: #e2e8f0; font-size: 13px; font-family: inherit; box-sizing: border-box;
+    }
+    .pwd-field input:focus { outline: none; border-color: #6366f1; }
+    .pwd-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+    .pwd-err { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: #f87171; }
+    .pwd-ok { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.3); color: #34d399; }
+    .pwd-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: #fff;
+      padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-secondary {
+      background: transparent; border: 1px solid #2d3548; color: #64748b;
+      padding: 9px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit;
+    }
 
     /* ── Stat Cards ── */
     .stats-row {
@@ -587,6 +648,12 @@ export class DashboardComponent implements OnInit {
   private projectSortField = '';
   private projectSortAsc = true;
 
+  // Password modal
+  showPasswordModal = false;
+  pwdForm = { current: '', newPwd: '', confirm: '' };
+  pwdMessage = '';
+  pwdSuccess = false;
+
   constructor(
     private resourceService: ResourceService,
     private projectService: ProjectService,
@@ -806,6 +873,22 @@ export class DashboardComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  changePassword() {
+    this.pwdMessage = '';
+    if (this.pwdForm.newPwd !== this.pwdForm.confirm) {
+      this.pwdMessage = 'New password and confirmation do not match';
+      this.pwdSuccess = false;
+      return;
+    }
+    const result = this.authService.changePassword(this.pwdForm.current, this.pwdForm.newPwd);
+    this.pwdMessage = result.message;
+    this.pwdSuccess = result.success;
+    if (result.success) {
+      this.pwdForm = { current: '', newPwd: '', confirm: '' };
+      setTimeout(() => { this.showPasswordModal = false; this.pwdMessage = ''; }, 1500);
+    }
   }
 
   // ── Export: CSV ──
